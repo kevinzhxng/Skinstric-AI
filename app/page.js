@@ -18,9 +18,9 @@ export default function Home() {
   const rightInnerDiamondRef = useRef(null);
 
   //button refs for animation
-  const leftInnerButtonRef = useRef(null);
+  const leftInnerDottedButtonRef = useRef(null);
   const leftOuterButtonRef = useRef(null);
-  const rightInnerButtonRef = useRef(null);
+  const rightInnerDottedButtonRef = useRef(null);
   const rightOuterButtonRef = useRef(null);
 
   //this handler for TAKE TEST button
@@ -56,6 +56,20 @@ export default function Home() {
       duration: 0.5,
       ease: "power2.out",
     });
+    
+    //expand right button
+    gsap.to(rightInnerDottedButtonRef.current, {
+      scale: 1.2,
+      opacity: 1,
+      duration: 0.5,
+      ease: "power2.out",
+    })
+    gsap.to(rightOuterButtonRef.current, {
+      scale: 1.5,
+      opacity: 1,
+      duration: 0.5,
+      ease: "power2.out" 
+    })
   };
 
   const handleTakeTestLeave = () => {
@@ -87,6 +101,20 @@ export default function Home() {
       opacity: 0,
       duration: 0.5,
       ease: "power2.out",
+    });
+
+    //contract right button
+    gsap.to(rightInnerDottedButtonRef.current, {
+      scale: 0.8,
+      opacity: 0,
+      duration: 0.5,
+      ease: "power2.out"
+    });
+    gsap.to(rightOuterButtonRef.current, {
+      scale: 0.8,
+      opacity: 0,
+      duration: 0.5,
+      ease: "power2.out"
     });
   };
 
@@ -122,6 +150,22 @@ export default function Home() {
       duration: 0.5,
       ease: "power2.out",
     });
+
+    // Expand left button - outer button scales up first
+    gsap.to(leftOuterButtonRef.current, {
+      scale: 1.5,
+      duration: 0.6,
+      ease: "power2.out",
+    })
+
+    // Inner dotted button appears with slight delay
+    gsap.to(leftInnerDottedButtonRef.current, {
+      scale: 1,
+      opacity: 1,
+      duration: 0.4,
+      delay: 0.2,
+      ease: "power2.out",
+    })
   };
 
   const handleDiscoverAILeave = () => {
@@ -154,6 +198,21 @@ export default function Home() {
       duration: 0.5,
       ease: "power2.out",
     });
+
+    // Contract left button - inner disappears first
+    gsap.to(leftInnerDottedButtonRef.current, {
+      scale: 0.8,
+      duration: 0.3,
+      ease: "power2.out",
+    })
+
+    // Then outer button scales back down
+    gsap.to(leftOuterButtonRef.current, {
+      scale: 1,
+      duration: 0.5,
+      delay: 0.1,
+      ease: "power2.out",
+    })
   };
 
   return (
@@ -189,9 +248,9 @@ export default function Home() {
               onClick={() => router.push("/about")}
             >
               {/* rotated box */}
-              <div className="w-8 h-8 border-[0.5px] border-black rotate-45 bg-white"></div>
+              <div ref={leftOuterButtonRef} className="w-8 h-8 border-[0.5px] border-black rotate-45 bg-white"></div>
               {/* centered triangle */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div ref={leftInnerDottedButtonRef} className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 <div className="w-0 h-0 border-t-[5px] border-b-[5px] border-r-[8px] border-t-transparent border-b-transparent border-r-black -translate-x-0.5"></div>
               </div>
             </div>
