@@ -22,6 +22,8 @@ export default function Home() {
   const leftOuterButtonRef = useRef(null);
   const rightInnerDottedButtonRef = useRef(null);
   const rightOuterButtonRef = useRef(null);
+  const discoverAIText = useRef(null);
+  const takeTestText = useRef(null);
 
   //this handler for TAKE TEST button
   const handleTakeTestHover = () => {
@@ -32,7 +34,7 @@ export default function Home() {
       ease: "power3.out",
     });
     gsap.to(skincareRef.current, {
-      x: -(window.innerWidth / 2) + 165,
+      x: -(window.innerWidth / 2) + 163,
       duration: 1,
       ease: "power3.out",
     });
@@ -57,22 +59,32 @@ export default function Home() {
       ease: "power2.out",
     });
     
-    //expand right button
-    gsap.to(rightInnerDottedButtonRef.current, {
-      scale: 1.2,
-      opacity: 1,
-      duration: 0.5,
+    // Expand right button - outer button scales up first
+    gsap.to(rightOuterButtonRef.current, {
+      scale: 2.0,
+      duration: 0.6,
       ease: "power2.out",
     })
-    gsap.to(rightOuterButtonRef.current, {
-      scale: 1.5,
+
+    // Inner dotted button appears with slight delay
+    gsap.to(rightInnerDottedButtonRef.current, {
+      scale: 1.6,
       opacity: 1,
-      duration: 0.5,
-      ease: "power2.out" 
+      duration: 0.6,
+      ease: "power2.out",
+    })
+
+    gsap.to(takeTestText.current, {
+      translateX: -28,
+      duration: 0.6,
+      ease: "power2.out"
     })
   };
 
   const handleTakeTestLeave = () => {
+    //to prevent the animations to freeze and stay displayed on the screen
+    gsap.killTweensOf([sophisticatedRef.current, skincareRef.current, leftGroupRef.current, rightOuterDiamondRef.current, rightInnerDiamondRef.current, rightInnerDottedButtonRef.current, rightOuterButtonRef.current, takeTestText.current]);
+    
     gsap.to(sophisticatedRef.current, {
       x: 0, //moves left by 40% of viewport width
       duration: 1,
@@ -89,7 +101,7 @@ export default function Home() {
       ease: "power3.out",
     });
 
-    // Contract right diamond
+    //contract right diamond
     gsap.to(rightOuterDiamondRef.current, {
       scale: 0.8,
       opacity: 0,
@@ -105,17 +117,22 @@ export default function Home() {
 
     //contract right button
     gsap.to(rightInnerDottedButtonRef.current, {
-      scale: 0.8,
+      scale: 1,
       opacity: 0,
-      duration: 0.5,
+      duration: 0.6,
       ease: "power2.out"
     });
     gsap.to(rightOuterButtonRef.current, {
-      scale: 0.8,
-      opacity: 0,
-      duration: 0.5,
+      scale: 1,
+      duration: 0.6,
+      ease: "power2.out",
+    })
+
+    gsap.to(takeTestText.current, {
+      translateX: 0,
+      duration: 0.6,
       ease: "power2.out"
-    });
+    })
   };
 
   //this is handler for  DISCOVER AI button
@@ -151,24 +168,32 @@ export default function Home() {
       ease: "power2.out",
     });
 
-    // Expand left button - outer button scales up first
+    //expand left button
     gsap.to(leftOuterButtonRef.current, {
-      scale: 1.5,
+      scale: 2.0,
       duration: 0.6,
       ease: "power2.out",
     })
 
-    // Inner dotted button appears with slight delay
     gsap.to(leftInnerDottedButtonRef.current, {
-      scale: 1,
+      scale: 1.6,
       opacity: 1,
-      duration: 0.4,
-      delay: 0.2,
+      duration: 0.6,
       ease: "power2.out",
+    })
+
+    //move Discover AI right
+    gsap.to(discoverAIText.current, {
+      translateX: 28,
+      duration: 0.6,
+      ease: "power2.out"
     })
   };
 
   const handleDiscoverAILeave = () => {
+    //to prevent the animations to freeze and stay on the screen
+    gsap.killTweensOf([sophisticatedRef.current, skincareRef.current, rightGroupRef.current, leftOuterDiamondRef.current, leftInnerDiamondRef.current, leftInnerDottedButtonRef.current, leftOuterButtonRef.current, discoverAIText.current]);
+    
     gsap.to(sophisticatedRef.current, {
       x: 0, //moves left by 40% of viewport width
       duration: 1,
@@ -185,7 +210,7 @@ export default function Home() {
       ease: "power3.out",
     });
 
-    // Contract left diamond
+    //contract left diamond
     gsap.to(leftOuterDiamondRef.current, {
       scale: 0.8,
       opacity: 0,
@@ -199,19 +224,25 @@ export default function Home() {
       ease: "power2.out",
     });
 
-    // Contract left button - inner disappears first
+    //contract left button
     gsap.to(leftInnerDottedButtonRef.current, {
-      scale: 0.8,
-      duration: 0.3,
+      scale: 1,
+      opacity: 0,
+      duration: 0.6,
       ease: "power2.out",
     })
 
-    // Then outer button scales back down
     gsap.to(leftOuterButtonRef.current, {
       scale: 1,
-      duration: 0.5,
-      delay: 0.1,
+      duration: 0.6,
       ease: "power2.out",
+    })
+
+    //move Discover AI Text back
+    gsap.to(discoverAIText.current, {
+      translateX: 0,
+      duration: 0.6,
+      ease: "power2.out"
     })
   };
 
@@ -249,12 +280,19 @@ export default function Home() {
             >
               {/* rotated box */}
               <div ref={leftOuterButtonRef} className="w-8 h-8 border-[0.5px] border-black rotate-45 bg-white"></div>
+
+              <div
+                ref={leftInnerDottedButtonRef}
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-dotted border-[1px] border-[#b7bcc5] rotate-45 bg-transparent opacity-0 scale-80"
+              ></div>
+
               {/* centered triangle */}
-              <div ref={leftInnerDottedButtonRef} className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 <div className="w-0 h-0 border-t-[5px] border-b-[5px] border-r-[8px] border-t-transparent border-b-transparent border-r-black -translate-x-0.5"></div>
               </div>
             </div>
             <button
+              ref={discoverAIText}
               className="text-[9px] cursor-pointer bg-transparent border-none outline-none"
               onClick={() => router.push("/about")}
               type="button"
@@ -289,6 +327,7 @@ export default function Home() {
           onMouseLeave={handleTakeTestLeave}
         >
           <button
+            ref={takeTestText}
             className="text-[9px] cursor-pointer bg-transparent border-none outline-none"
             onClick={() => router.push("/testing")}
             type="button"
@@ -300,7 +339,13 @@ export default function Home() {
             onClick={() => router.push("/testing")}
           >
             {/* rotated box */}
-            <div className="w-8 h-8 border-[0.5px] border-black -rotate-45 bg-white"></div>
+            <div ref={rightOuterButtonRef} className="w-8 h-8 border-[0.5px] border-black -rotate-45 bg-white"></div>
+            
+            <div
+              ref={rightInnerDottedButtonRef}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-dotted border-[1px] border-[#b7bcc5] -rotate-45 bg-transparent opacity-0 scale-80"
+            ></div>
+            
             {/* centered triangle */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <div className="w-0 h-0 border-t-[5px] border-b-[5px] border-l-[8px] border-t-transparent border-b-transparent border-l-black translate-x-0.5"></div>
