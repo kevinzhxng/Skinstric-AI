@@ -9,7 +9,7 @@ export default function Home() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
-  
+
   const sophisticatedRef = useRef(null);
   const skincareRef = useRef(null);
   const leftGroupRef = useRef(null);
@@ -28,12 +28,16 @@ export default function Home() {
   const rightOuterButtonRef = useRef(null);
   const discoverAIText = useRef(null);
   const takeTestText = useRef(null);
- 
+
   useEffect(() => {
     //checks if page refresh by looking at performance navigation type
-    const isRefresh = performance.navigation.type === 1 || 
-                     (typeof window !== 'undefined' && window.performance && window.performance.getEntriesByType('navigation')[0]?.type === 'reload');
-    
+    const isRefresh =
+      performance.navigation.type === 1 ||
+      (typeof window !== "undefined" &&
+        window.performance &&
+        window.performance.getEntriesByType("navigation")[0]?.type ===
+          "reload");
+
     //skip loading if its not a refresh
     if (!isRefresh) {
       setIsLoading(false);
@@ -46,29 +50,49 @@ export default function Home() {
     setHasInitialized(true);
   };
 
-  // Animate text in after main page loads
+  // Entrance animations for main content
   useEffect(() => {
     if (hasInitialized && !isLoading) {
-      // Set initial state - text starts from below the screen
+      // Set initial state - text positioned below center
       gsap.set([sophisticatedRef.current, skincareRef.current], {
-        y: 200,
-        opacity: 1,
-        transformOrigin: "bottom"
+        y: 100, // Start 100px below their final position
+        opacity: 0,
       });
 
-      // Animate text in from below the screen (grave effect)
-      const tl = gsap.timeline();
-      
-      tl.to(sophisticatedRef.current, {
+      gsap.set([leftGroupRef.current, rightGroupRef.current], {
+        opacity: 0,
+      });
+
+      // Animate text emerging from below
+      gsap.to(sophisticatedRef.current, {
         y: 0,
-        duration: 1.5,
-        ease: "power2.out"
-      })
-      .to(skincareRef.current, {
+        opacity: 1,
+        duration: 1.2,
+        ease: "power3.out",
+        delay: 0.2,
+      });
+
+      gsap.to(skincareRef.current, {
         y: 0,
-        duration: 1.5,
-        ease: "power2.out"
-      }, "-=1.2"); // Start before the previous animation ends for overlap
+        opacity: 1,
+        duration: 1.2,
+        ease: "power3.out",
+        delay: 0.2,
+      });
+
+      gsap.to(leftGroupRef.current, {
+        opacity: 1,
+        duration: 2,
+        ease: "power3.out",
+        delay: 0.4,
+      });
+
+      gsap.to(rightGroupRef.current, {
+        opacity: 1,
+        duration: 2,
+        ease: "power3.out",
+        delay: 0.4,
+      });
     }
   }, [hasInitialized, isLoading]);
 
@@ -105,13 +129,13 @@ export default function Home() {
       duration: 0.5,
       ease: "power2.out",
     });
-    
+
     // Expand right button - outer button scales up first
     gsap.to(rightOuterButtonRef.current, {
       scale: 2.0,
       duration: 0.6,
       ease: "power2.out",
-    })
+    });
 
     // Inner dotted button appears with slight delay
     gsap.to(rightInnerDottedButtonRef.current, {
@@ -119,19 +143,28 @@ export default function Home() {
       opacity: 1,
       duration: 0.6,
       ease: "power2.out",
-    })
+    });
 
     gsap.to(takeTestText.current, {
       translateX: -28,
       duration: 0.6,
-      ease: "power2.out"
-    })
+      ease: "power2.out",
+    });
   };
 
   const handleTakeTestLeave = () => {
     //to prevent the animations to freeze and stay displayed on the screen
-    gsap.killTweensOf([sophisticatedRef.current, skincareRef.current, leftGroupRef.current, rightOuterDiamondRef.current, rightInnerDiamondRef.current, rightInnerDottedButtonRef.current, rightOuterButtonRef.current, takeTestText.current]);
-    
+    gsap.killTweensOf([
+      sophisticatedRef.current,
+      skincareRef.current,
+      leftGroupRef.current,
+      rightOuterDiamondRef.current,
+      rightInnerDiamondRef.current,
+      rightInnerDottedButtonRef.current,
+      rightOuterButtonRef.current,
+      takeTestText.current,
+    ]);
+
     gsap.to(sophisticatedRef.current, {
       x: 0, //moves left by 40% of viewport width
       duration: 1,
@@ -167,19 +200,19 @@ export default function Home() {
       scale: 1,
       opacity: 0,
       duration: 0.6,
-      ease: "power2.out"
+      ease: "power2.out",
     });
     gsap.to(rightOuterButtonRef.current, {
       scale: 1,
       duration: 0.6,
       ease: "power2.out",
-    })
+    });
 
     gsap.to(takeTestText.current, {
       translateX: 0,
       duration: 0.6,
-      ease: "power2.out"
-    })
+      ease: "power2.out",
+    });
   };
 
   //this is handler for  DISCOVER AI button
@@ -220,27 +253,36 @@ export default function Home() {
       scale: 2.0,
       duration: 0.6,
       ease: "power2.out",
-    })
+    });
 
     gsap.to(leftInnerDottedButtonRef.current, {
       scale: 1.6,
       opacity: 1,
       duration: 0.6,
       ease: "power2.out",
-    })
+    });
 
     //move Discover AI right
     gsap.to(discoverAIText.current, {
       translateX: 28,
       duration: 0.6,
-      ease: "power2.out"
-    })
+      ease: "power2.out",
+    });
   };
 
   const handleDiscoverAILeave = () => {
     //to prevent the animations to freeze and stay on the screen
-    gsap.killTweensOf([sophisticatedRef.current, skincareRef.current, rightGroupRef.current, leftOuterDiamondRef.current, leftInnerDiamondRef.current, leftInnerDottedButtonRef.current, leftOuterButtonRef.current, discoverAIText.current]);
-    
+    gsap.killTweensOf([
+      sophisticatedRef.current,
+      skincareRef.current,
+      rightGroupRef.current,
+      leftOuterDiamondRef.current,
+      leftInnerDiamondRef.current,
+      leftInnerDottedButtonRef.current,
+      leftOuterButtonRef.current,
+      discoverAIText.current,
+    ]);
+
     gsap.to(sophisticatedRef.current, {
       x: 0, //moves left by 40% of viewport width
       duration: 1,
@@ -277,20 +319,20 @@ export default function Home() {
       opacity: 0,
       duration: 0.6,
       ease: "power2.out",
-    })
+    });
 
     gsap.to(leftOuterButtonRef.current, {
       scale: 1,
       duration: 0.6,
       ease: "power2.out",
-    })
+    });
 
     //move Discover AI Text back
     gsap.to(discoverAIText.current, {
       translateX: 0,
       duration: 0.6,
-      ease: "power2.out"
-    })
+      ease: "power2.out",
+    });
   };
 
   return (
@@ -299,7 +341,7 @@ export default function Home() {
       {isLoading && (
         <InitialLoading onLoadingComplete={handleLoadingComplete} />
       )}
-      
+
       {/* Main content - only show after loading is complete */}
       {hasInitialized && (
         <>
@@ -311,9 +353,7 @@ export default function Home() {
             >
               {/* Diamond */}
               <div className="relative">
-                <div
-                  className="absolute top-1/2 left-0 w-[360px] h-[360px] border-dotted border-[1.5px] border-gray-400 transform rotate-45 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                ></div>
+                <div className="absolute top-1/2 left-0 w-[360px] h-[360px] border-dotted border-[1.5px] border-gray-400 transform rotate-45 -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
                 <div
                   ref={leftInnerDiamondRef}
                   className="absolute top-1/2 left-0 w-[400px] h-[400px] border-dotted border-[1.5px] border-[#b7bcc5] transform rotate-45 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 scale-80"
@@ -334,7 +374,10 @@ export default function Home() {
                   onClick={() => router.push("/about")}
                 >
                   {/* rotated box */}
-                  <div ref={leftOuterButtonRef} className="w-8 h-8 border-[0.5px] border-black rotate-45 bg-white"></div>
+                  <div
+                    ref={leftOuterButtonRef}
+                    className="w-8 h-8 border-[0.5px] border-black rotate-45 bg-white"
+                  ></div>
 
                   <div
                     ref={leftInnerDottedButtonRef}
@@ -363,9 +406,11 @@ export default function Home() {
             className="absolute inset-y-0 right-0 flex items-center h-full z-10"
           >
             {/* Diamond */}
-            <div className="absolute top-1/2 right-0 w-[360px] h-[360px] 
+            <div
+              className="absolute top-1/2 right-0 w-[360px] h-[360px] 
             border-dotted border-[1.5px] border-gray-400 transform rotate-45 
-            translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+            translate-x-1/2 -translate-y-1/2 pointer-events-none"
+            ></div>
             <div
               ref={rightInnerDiamondRef}
               className="absolute top-1/2 right-0 w-[400px] h-[400px] border-dotted border-[1.5px] border-[#b7bcc5] transform rotate-45 translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 scale-80"
@@ -394,13 +439,16 @@ export default function Home() {
                 onClick={() => router.push("/testing")}
               >
                 {/* rotated box */}
-                <div ref={rightOuterButtonRef} className="w-8 h-8 border-[0.5px] border-black -rotate-45 bg-white"></div>
-                
+                <div
+                  ref={rightOuterButtonRef}
+                  className="w-8 h-8 border-[0.5px] border-black -rotate-45 bg-white"
+                ></div>
+
                 <div
                   ref={rightInnerDottedButtonRef}
                   className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-dotted border-[1px] border-[#b7bcc5] -rotate-45 bg-transparent opacity-0 scale-80"
                 ></div>
-                
+
                 {/* centered triangle */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                   <div className="w-0 h-0 border-t-[5px] border-b-[5px] border-l-[8px] border-t-transparent border-b-transparent border-l-black translate-x-0.5"></div>
