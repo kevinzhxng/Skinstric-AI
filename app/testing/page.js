@@ -166,31 +166,83 @@ export default function TestingPage() {
             <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
               <video
                 ref={videoRef}
-                className="w-full max-w-md rounded"
+                className="w-full h-full object-cover"
                 autoPlay
                 playsInline
+                style={{ position: "absolute", top: 0, left: 0 }}
               />
-              <canvas ref={canvasRef} style={{ display: "none" }} />
-              <button
-                className="mt-4 px-6 py-2 bg-white rounded shadow font-bold"
-                onClick={handleCapture}
-                disabled={loading}
-              >
-                {loading ? "Analyzing..." : "Take Picture"}
-              </button>
-              <button
-                className="mt-2 px-4 py-1 bg-gray-200 rounded"
-                onClick={() => {
-                  if (videoRef.current && videoRef.current.srcObject) {
-                    videoRef.current.srcObject
-                      .getTracks()
-                      .forEach((track) => track.stop());
-                  }
-                  setCameraMode(false);
+
+              <div
+                className="absolute left-1/2 top-1/2 z-20"
+                style={{
+                  transform: "translate(-50%, -50%)",
+                  width: "380px",
+                  height: "500px",
+                  border: "1px solid white",
+                  borderRadius: "50%",
+                  boxSizing: "border-box",
+                  pointerEvents: "none",
                 }}
-              >
-                Cancel
-              </button>
+              />
+              <div className="absolute text-gray-300 top-40 text-xs">
+                PLACE YOUR HEAD IN CIRCLE
+              </div>
+              <div className="absolute right-0 flex flex-col items-center z-10">
+                <canvas ref={canvasRef} style={{ display: "none" }} />
+
+                <button
+                  className="mb-4 px-6 py-2 bg-white rounded shadow font-bold"
+                  onClick={handleCapture}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <svg
+                      className="animate-spin w-8 h-8 text-gray-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    // Camera icon SVG
+                    <svg
+                      className="w-8 h-8 text-gray-700"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2l2-3h6l2 3h2a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  className="px-4 py-1 bg-gray-200 rounded"
+                  onClick={() => {
+                    if (videoRef.current && videoRef.current.srcObject) {
+                      videoRef.current.srcObject
+                        .getTracks()
+                        .forEach((track) => track.stop());
+                    }
+                    setCameraMode(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           ) : (
             <div className="relative flex flex-col items-center">
@@ -345,7 +397,7 @@ export default function TestingPage() {
         </div>
       </div>
       <div className="fixed bottom-8 left-18 transform -translate-x-1/2 z-50">
-        <BackButton no />
+        <BackButton />
       </div>
     </div>
   );
