@@ -116,7 +116,7 @@ export default function Home() {
       ease: "power3.out",
     });
 
-    // Expand right diamond
+    //expand right diamond
     gsap.to(rightOuterDiamondRef.current, {
       scale: 1,
       opacity: 1,
