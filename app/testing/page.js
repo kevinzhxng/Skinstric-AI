@@ -1,4 +1,4 @@
-"use client"; //so i can add interactivity
+"use client";
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
@@ -22,6 +22,11 @@ export default function TestingPage() {
   const rightSquare1 = useRef(null);
   const rightSquare2 = useRef(null);
   const rightSquare3 = useRef(null);
+
+  //initial loading effect
+  const toStartAnalysisTextRef = useRef(null);
+  const cameraRef = useRef(null);
+  const galleryRef = useRef(null);
 
   useEffect(() => {
     //left squares
@@ -64,6 +69,46 @@ export default function TestingPage() {
       ease: "linear",
     });
   });
+
+  useEffect(() => {
+    gsap.to(toStartAnalysisTextRef.current, {
+      opacity: 1,
+      duration: 1.5,
+      ease: "power2.out",
+    });
+
+    gsap.to(cameraRef.current, {
+      opacity: 1,
+      x: 0,
+      duration: 1,
+      ease: "power2.out",
+      delay: 0.2,
+    });
+    gsap.to(galleryRef.current, {
+      opacity: 1,
+      x: 0,
+      duration: 1,
+      ease: "power2.out",
+      delay: 0.4,
+    });
+  }, []);
+
+  const handleNavigateOut = () => {
+    //animating main content out
+    gsap.to(
+      [toStartAnalysisTextRef.current, cameraRef.current, galleryRef.current],
+      {
+        opacity: 0,
+        y: 60,
+        duration: 0.7,
+        ease: "power2.in",
+        stagger: 0.05,
+        onComplete: () => {
+          router.back();
+        },
+      }
+    );
+  };
 
   //starts the camera
   const handleOpenCamera = async () => {
@@ -155,7 +200,10 @@ export default function TestingPage() {
 
   return (
     <div className="">
-      <div className="absolute p-8 text-[10px] font-semibold mt-14">
+      <div
+        ref={toStartAnalysisTextRef}
+        className="absolute p-8 text-[10px] font-semibold mt-14 opacity-0"
+      >
         <p>TO START ANALYSIS</p>
       </div>
 
@@ -173,6 +221,18 @@ export default function TestingPage() {
               />
 
               <div
+                className="absolute inset-0 z-10 pointer-events-none"
+                style={{
+                  WebkitMaskImage:
+                    "radial-gradient(circle 190px at 50% 50%, transparent 180px, black 250px)",
+                  maskImage:
+                    "radial-gradient(circle 190px at 50% 50%, transparent 180px, black 250px)",
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                }}
+              />
+
+              <div
                 className="absolute left-1/2 top-1/2 z-20"
                 style={{
                   transform: "translate(-50%, -50%)",
@@ -184,18 +244,19 @@ export default function TestingPage() {
                   pointerEvents: "none",
                 }}
               />
-              <div className="absolute text-gray-300 top-40 text-xs">
+              <div className="absolute text-gray-300 top-50 text-xs">
                 PLACE YOUR HEAD IN CIRCLE
               </div>
-              <div className="absolute right-0 flex flex-col items-center z-10">
+              <div className="absolute right-0 flex flex-col items-center z-10 pr-8">
                 <canvas ref={canvasRef} style={{ display: "none" }} />
 
                 <button
-                  className="mb-4 px-6 py-2 bg-white rounded shadow font-bold"
+                  className="mb-4 w-20 h-20 flex items-center justify-center rounded-full bg-white shadow-lg border-2 border-gray-300 hover:bg-gray-100 transition-colors disabled:opacity-50"
                   onClick={handleCapture}
                   disabled={loading}
                 >
                   {loading ? (
+                    //spinning animation for camera
                     <svg
                       className="animate-spin w-8 h-8 text-gray-500"
                       fill="none"
@@ -218,7 +279,7 @@ export default function TestingPage() {
                   ) : (
                     // Camera icon SVG
                     <svg
-                      className="w-8 h-8 text-gray-700"
+                      className="w-10 h-10 text-gray-700"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
@@ -229,23 +290,13 @@ export default function TestingPage() {
                     </svg>
                   )}
                 </button>
-                <button
-                  className="px-4 py-1 bg-gray-200 rounded"
-                  onClick={() => {
-                    if (videoRef.current && videoRef.current.srcObject) {
-                      videoRef.current.srcObject
-                        .getTracks()
-                        .forEach((track) => track.stop());
-                    }
-                    setCameraMode(false);
-                  }}
-                >
-                  Cancel
-                </button>
               </div>
             </div>
           ) : (
-            <div className="relative flex flex-col items-center">
+            <div
+              ref={cameraRef}
+              className="relative flex flex-col items-center opacity-0 -translate-x-8"
+            >
               <div className="flex items-center justify-center transform">
                 <button
                   className="absolute p-16 z-20 transition-transform duration-400 hover:scale-80 ease-out cursor-pointer"
@@ -308,7 +359,10 @@ export default function TestingPage() {
           )}
 
           {/* Right Diamond Button */}
-          <div className="relative flex flex-col items-center">
+          <div
+            ref={galleryRef}
+            className="relative flex flex-col items-center opacity-0 -translate-x-8"
+          >
             <div className="flex items-center justify-center transform">
               <button
                 className="absolute p-16 z-20 transition-transform duration-400 hover:scale-80 ease-out cursor-pointer"
@@ -333,15 +387,15 @@ export default function TestingPage() {
                     r="50"
                     fill="#FCFCFC"
                     stroke="#1A1B1C"
-                    stroke-width="2"
+                    strokeWidth="2"
                   ></circle>
                   <path
                     d="M78.321 68c7.042 0 12.75-5.708 12.75-12.75S85.363 42.5 78.321 42.5c-7.041 0-12.75 5.708-12.75 12.75S71.28 68 78.321 68Z"
                     fill="#1A1B1C"
                   ></path>
                   <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
+                    fillRule="evenodd"
+                    clipRule="evenodd"
                     d="M17 68c0 3.96.451 7.815 1.306 11.516C23.526 102.136 43.794 119 68 119c26.867 0 48.882-20.776 50.856-47.138A51.96 51.96 0 0 0 119 68c0-28.166-22.834-51-51-51S17 39.834 17 68Zm18.337-.274L19.382 78.77A49.962 49.962 0 0 1 18.215 68c0-27.496 22.29-49.786 49.786-49.786 27.496 0 49.786 22.29 49.786 49.786 0 1.541-.07 3.066-.207 4.572l-34.634 19.24a7.286 7.286 0 0 1-7.91-.54l-31.18-23.385a7.286 7.286 0 0 0-8.518-.161Z"
                     fill="#1A1B1C"
                   ></path>
@@ -396,8 +450,8 @@ export default function TestingPage() {
           </div>
         </div>
       </div>
-      <div className="fixed bottom-8 left-18 transform -translate-x-1/2 z-50">
-        <BackButton />
+      <div className="fixed bottom-10 left-20 transform -translate-x-1/2 z-50">
+        <BackButton onNavigate={() => handleNavigateOut("/")} />
       </div>
     </div>
   );

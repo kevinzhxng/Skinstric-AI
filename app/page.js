@@ -10,6 +10,9 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
 
+  const leftButtonGroupRef = useRef(null);
+  const rightButtonGroupRef = useRef(null);
+
   const sophisticatedRef = useRef(null);
   const skincareRef = useRef(null);
   const leftGroupRef = useRef(null);
@@ -50,7 +53,7 @@ export default function Home() {
     setHasInitialized(true);
   };
 
-  // Entrance animations for main content
+  //animations for main content
   useEffect(() => {
     if (hasInitialized && !isLoading) {
       // Set initial state - text positioned below center
@@ -63,7 +66,7 @@ export default function Home() {
         opacity: 0,
       });
 
-      // Animate text emerging from below
+      //animate text emerging from below
       gsap.to(sophisticatedRef.current, {
         y: 0,
         opacity: 1,
@@ -93,6 +96,20 @@ export default function Home() {
         ease: "power3.out",
         delay: 0.4,
       });
+
+      gsap.to(leftButtonGroupRef.current, {
+        opacity: 1,
+        duration: 1.2,
+        ease: "power3.out",
+        delay: 0.6,
+      });
+
+      gsap.to(rightButtonGroupRef.current, {
+        opacity: 1,
+        duration: 1.2,
+        ease: "power3.out",
+        delay: 0.6,
+      });
     }
   }, [hasInitialized, isLoading]);
 
@@ -100,12 +117,12 @@ export default function Home() {
   const handleTakeTestHover = () => {
     //moves text to left
     gsap.to(sophisticatedRef.current, {
-      x: -(window.innerWidth / 2) + 240, //moves left by 40% of viewport width
+      x: -(window.innerWidth / 2) + 280, //moves left by 40% of viewport width
       duration: 1,
       ease: "power3.out",
     });
     gsap.to(skincareRef.current, {
-      x: -(window.innerWidth / 2) + 163,
+      x: -(window.innerWidth / 2) + 188,
       duration: 1,
       ease: "power3.out",
     });
@@ -219,12 +236,12 @@ export default function Home() {
   const handleDiscoverAIHover = () => {
     //moves text to right
     gsap.to(sophisticatedRef.current, {
-      x: window.innerWidth / 2 - 240, //moves left by 40% of viewport width
+      x: window.innerWidth / 2 - 280, //moves left by 40% of viewport width
       duration: 1,
       ease: "power3.out",
     });
     gsap.to(skincareRef.current, {
-      x: window.innerWidth / 2 - 160,
+      x: window.innerWidth / 2 - 186,
       duration: 1,
       ease: "power3.out",
     });
@@ -335,6 +352,28 @@ export default function Home() {
     });
   };
 
+  const handleNavigateOut = (target) => {
+    //animating main content out
+    gsap.to(
+      [
+        sophisticatedRef.current,
+        skincareRef.current,
+        leftGroupRef.current,
+        rightGroupRef.current,
+      ],
+      {
+        opacity: 0,
+        y: 60,
+        duration: 0.7,
+        ease: "power2.in",
+        stagger: 0.05,
+        onComplete: () => {
+          router.push(target);
+        },
+      }
+    );
+  };
+
   return (
     <div className="relative h-screen overflow-hidden">
       {/* Show loading screen only on page refresh */}
@@ -366,12 +405,13 @@ export default function Home() {
               {/* Button group */}
               <div
                 className="flex items-center gap-5 ml-10"
+                ref={leftButtonGroupRef}
                 onMouseEnter={handleDiscoverAIHover}
                 onMouseLeave={handleDiscoverAILeave}
               >
                 <div
                   className="relative cursor-pointer"
-                  onClick={() => router.push("/about")}
+                  onClick={() => handleNavigateOut("/about")}
                 >
                   {/* rotated box */}
                   <div
@@ -392,7 +432,7 @@ export default function Home() {
                 <button
                   ref={discoverAIText}
                   className="text-[9px] cursor-pointer bg-transparent border-none outline-none"
-                  onClick={() => router.push("/about")}
+                  onClick={() => handleNavigateOut("/about")}
                   type="button"
                 >
                   DISCOVER A.I
@@ -423,20 +463,21 @@ export default function Home() {
             {/* Button group */}
             <div
               className="flex items-center gap-5 mr-10 z-10"
+              ref={rightButtonGroupRef}
               onMouseEnter={handleTakeTestHover}
               onMouseLeave={handleTakeTestLeave}
             >
               <button
                 ref={takeTestText}
                 className="text-[9px] cursor-pointer bg-transparent border-none outline-none"
-                onClick={() => router.push("/testing")}
+                onClick={() => handleNavigateOut("/testing")}
                 type="button"
               >
                 TAKE TEST
               </button>
               <div
                 className="relative cursor-pointer"
-                onClick={() => router.push("/testing")}
+                onClick={() => handleNavigateOut("/testing")}
               >
                 {/* rotated box */}
                 <div
@@ -460,14 +501,14 @@ export default function Home() {
           <div className="absolute top-[45%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
             <div
               ref={sophisticatedRef}
-              className="text-[76px] font-normal text-center leading-[1] tracking-[-0.04em]"
+              className="text-[90px] font-[300] text-center leading-[1] tracking-[-0.04em]"
             >
               Sophisticated
             </div>
 
             <div
               ref={skincareRef}
-              className="text-[76px] font-normal text-center leading-[1] tracking-[-0.04em]"
+              className="text-[90px] font-[300] text-center leading-[1] tracking-[-0.04em]"
             >
               skincare
             </div>
