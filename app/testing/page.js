@@ -14,6 +14,7 @@ export default function TestingPage() {
   const [loading, setLoading] = useState(false);
   const [cameraMode, setCameraMode] = useState(false);
 
+  
   //animating the dotted squares
   const leftSquare1 = useRef(null);
   const leftSquare2 = useRef(null);
@@ -22,6 +23,7 @@ export default function TestingPage() {
   const rightSquare1 = useRef(null);
   const rightSquare2 = useRef(null);
   const rightSquare3 = useRef(null);
+
 
   //initial loading effect
   const toStartAnalysisTextRef = useRef(null);
@@ -133,6 +135,7 @@ export default function TestingPage() {
       const context = canvas.getContext("2d");
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL("image/png");
+      //immediately redirect to analysis page and handle loading there
       await handleImageDataUrl(dataUrl);
       //stops camera
       const stream = video.srcObject;
@@ -145,7 +148,8 @@ export default function TestingPage() {
 
   const handleImageDataUrl = async (dataUrl) => {
     const base64String = dataUrl.split(",")[1];
-    setLoading(true);
+    //immediately redirect to /analysis and let that page handle loading
+    router.push("/analysis");
     try {
       const response = await fetch(
         "https://us-central1-frontend-simplified.cloudfunctions.net/skinstricPhaseTwo",
@@ -157,11 +161,9 @@ export default function TestingPage() {
       );
       const data = await response.json();
       localStorage.setItem("analysisResult", JSON.stringify(data));
-      router.push("analysis");
     } catch (err) {
       alert("failed to scan image");
     }
-    setLoading(false);
   };
 
   const handleFileChange = async (e) => {
@@ -202,9 +204,9 @@ export default function TestingPage() {
     <div className="">
       <div
         ref={toStartAnalysisTextRef}
-        className="absolute p-8 text-[10px] font-semibold mt-14 opacity-0"
+        className="absolute p-8 text-[12px] font-semibold mt-14 opacity-0"
       >
-        <p>TO START ANALYSIS</p>
+        <p>TO START THE ANALYSIS</p>
       </div>
 
       <div className="min-h-screen flex items-center justify-center">
@@ -217,18 +219,18 @@ export default function TestingPage() {
                 className="w-full h-full object-cover"
                 autoPlay
                 playsInline
-                style={{ position: "absolute", top: 0, left: 0 }}
+                style={{ position: "absolute", top: 0, left: 0, transform: "scaleX(-1)" }}
               />
 
               <div
                 className="absolute inset-0 z-10 pointer-events-none"
                 style={{
                   WebkitMaskImage:
-                    "radial-gradient(circle 190px at 50% 50%, transparent 180px, black 250px)",
+                    "radial-gradient(ellipse 210px 280px at 50% 50%, transparent 180px, black 250px)",
                   maskImage:
-                    "radial-gradient(circle 190px at 50% 50%, transparent 180px, black 250px)",
-                  backdropFilter: "blur(6px)",
-                  WebkitBackdropFilter: "blur(6px)",
+                    "radial-gradient(ellipse 210px 280px at 50% 50%, transparent 180px, black 250px)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
                 }}
               />
 
@@ -236,8 +238,8 @@ export default function TestingPage() {
                 className="absolute left-1/2 top-1/2 z-20"
                 style={{
                   transform: "translate(-50%, -50%)",
-                  width: "380px",
-                  height: "500px",
+                  width: "420px",
+                  height: "560px",
                   border: "1px solid white",
                   borderRadius: "50%",
                   boxSizing: "border-box",
@@ -255,29 +257,7 @@ export default function TestingPage() {
                   onClick={handleCapture}
                   disabled={loading}
                 >
-                  {loading ? (
-                    //spinning animation for camera
-                    <svg
-                      className="animate-spin w-8 h-8 text-gray-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    // Camera icon SVG
+                  
                     <svg
                       className="w-10 h-10 text-gray-700"
                       fill="none"
@@ -288,7 +268,7 @@ export default function TestingPage() {
                       <path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2l2-3h6l2 3h2a2 2 0 0 1 2 2z" />
                       <circle cx="12" cy="13" r="4" />
                     </svg>
-                  )}
+                  
                 </button>
               </div>
             </div>
