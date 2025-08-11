@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import BackButton from "../components/BackButton";
 import gsap from "gsap";
 
 function AnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
+  const [selectedRace, setSelectedRace] = useState(null);
+  const [selectedAge, setSelectedAge] = useState(null);
+  const [selectedGender, setSelectedGender] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("race");
+  const router = useRouter();
 
   const rightSquare1 = useRef(null);
   const rightSquare2 = useRef(null);
@@ -16,6 +22,110 @@ function AnalysisPage() {
   const preparingAnalysis = useRef(null);
 
   const rotationAnims = useRef([]);
+
+  //for right column button
+  const DiamondIcon = ({ filled = false, size = 12 }) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 12 12"
+        className="flex-shrink-0"
+      >
+        <path
+          d="M6 1L11 6L6 11L1 6L6 1Z"
+          fill={filled ? "white" : "transparent"}
+          stroke="black"
+          strokeWidth="1"
+        />
+      </svg>
+    );
+  };
+
+  const getSelectedConfidence = () => {
+    if (!result?.data) return 0;
+
+    if (
+      selectedCategory === "race" &&
+      selectedRace &&
+      result.data.race[selectedRace]
+    ) {
+      return (result.data.race[selectedRace] * 100).toFixed(1);
+    }
+
+    if (
+      selectedCategory === "age" &&
+      selectedAge &&
+      result.data.age[selectedAge]
+    ) {
+      return (result.data.age[selectedAge] * 100).toFixed(1);
+    }
+
+    if (
+      selectedCategory === "gender" &&
+      selectedGender &&
+      result.data.gender[selectedGender]
+    ) {
+      return (result.data.gender[selectedGender] * 100).toFixed(1);
+    }
+
+    if (selectedCategory === "race") {
+      const [race, confidence] = getHighestConfidence(result.data.race);
+      return (confidence * 100).toFixed(1);
+    }
+
+    if (selectedCategory === "age") {
+      const [age, confidence] = getHighestConfidence(result.data.age);
+      return (confidence * 100).toFixed(1);
+    }
+
+    if (selectedCategory === "gender") {
+      const [gender, confidence] = getHighestConfidence(result.data.gender);
+      return (confidence * 100).toFixed(1);
+    }
+
+    return 0;
+  };
+
+  const getSelectedName = () => {
+    if (selectedCategory === "race") {
+      if (selectedRace) {
+        return selectedRace.toUpperCase();
+      }
+      const [race, confidence] = getHighestConfidence(result.data.race);
+      return race.toUpperCase();
+    }
+
+    if (selectedCategory === "age") {
+      if (selectedAge) {
+        return selectedAge;
+      }
+      const [age, confidence] = getHighestConfidence(result.data.age);
+      return age;
+    }
+
+    if (selectedCategory === "gender") {
+      if (selectedGender) {
+        return selectedGender.toUpperCase();
+      }
+      const [gender, confidence] = getHighestConfidence(result.data.gender);
+      return gender.toUpperCase();
+    }
+
+    return "Unknown";
+  };
+
+  const getSelectedRaceName = () => {
+    if (selectedRace) {
+      return selectedRace.toUpperCase();
+    }
+
+    if (!result?.data?.race) {
+      return "unknown";
+    }
+    const [race, confidence] = getHighestConfidence(result.data.race);
+    return race.toUpperCase();
+  };
 
   const getHighestConfidence = (obj) => {
     //Object.entries(obj) converts object into an array with key, value pairs
@@ -61,30 +171,33 @@ function AnalysisPage() {
     const offset = circumference - progress;
 
     return (
-      <div className="relative flex items-center justify-center">
-        <svg width={size} height={size} className="transform -rotate-90">
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="#e5e7eb"
-            strokeWidth={strokeWidth}
-            fill="transparent"
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="#000000"
-            strokeWidth={strokeWidth}
-            fill="transparent"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-          />
-        </svg>
-        <div className="absolute text-center">
-          <div className="text-2xl font-bold">{percentage}%</div>
+      <div className="flex items-end justify-end h-full">
+        <div className="relative flex items-center justify-center">
+          <svg width={size} height={size} className="transform -rotate-90">
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke="#e5e7eb"
+              strokeWidth={strokeWidth}
+              fill="transparent"
+            />
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke="#000000"
+              strokeWidth={strokeWidth}
+              fill="transparent"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+            />
+          </svg>
+          <div className="absolute text-center flex">
+            <div className="text-4xl">{percentage}</div>
+            <div>%</div>
+          </div>
         </div>
       </div>
     );
@@ -194,6 +307,22 @@ function AnalysisPage() {
     );
   };
 
+  const handleConfirm = () => {
+    const currentSelections = {
+      race: selectedRace || getHighestConfidence(result.data.race)[0],
+      age: selectedAge || getHighestConfidence(result.data.age)[0],
+      gender: selectedGender || getHighestConfidence(result.data.gender)[0],
+      category: selectedCategory,
+    };
+
+    localStorage.setItem(
+      "confirmedSelections",
+      JSON.stringify(currentSelections)
+    );
+
+    router.push("/summary");
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 bg-white">
@@ -238,113 +367,208 @@ function AnalysisPage() {
   return (
     <div className="min-h-screen flex flex-col transform-none rotate-0">
       <div className="flex-1 pt-[72px] pl-[32px] pr-[32px] pb-[32px]">
-        <div
-          className="border-1 flex-col"
-          style={{ transform: "none", rotate: "0deg" }}
-        >
-          <div
-            className="text-[13px] font-[400]"
-            style={{ transform: "none", rotate: "0deg" }}
-          >
+        <div className="flex-col !transform-none !rotate-0">
+          <div className="text-[13px] font-[400] !transform-none !rotate-0">
             A.I. ANALYSIS
           </div>
-          <div
-            className="font-[400] text-[54px] tracking-[-0.05em]"
-            style={{ transform: "none", rotate: "0deg" }}
-          >
+          <div className="font-[400] text-[54px] tracking-[-0.05em] !transform-none !rotate-0">
             DEMOGRAPHICS
           </div>
-          <div
-            className="text-[14px] font-[300]"
-            style={{ transform: "none", rotate: "0deg" }}
-          >
+          <div className="text-[14px] font-[300] !transform-none !rotate-0">
             PREDICTED RACE & AGE
           </div>
         </div>
         <div
           className="flex transform-none rotate-0 mt-[32px] flex-1"
-          style={{ minHeight: "calc(100vh - 343px)" }}
+          style={{ minHeight: "calc(100vh - 364px)" }}
         >
           <div className="transform-none rotate-0 w-[13%] mr-[8px]">
-            <div className="border-t-2 bg-gray-100">
-              <div className="pt-[8px] pl-[12px] mb-[36px] text-[14px] tracking-[-0.03em] font-semibold">
-                {getHighestRace()}
+            <button
+              onClick={() => {
+                setSelectedCategory("race");
+                setSelectedRace(null);
+              }}
+              className={`w-full cursor-pointer border-t-2 transition-colors ${
+                selectedCategory === "race"
+                  ? "bg-black text-white"
+                  : "bg-[#f3f3f4] hover:bg-gray-200"
+              }`}
+            >
+              <div className="flex pt-[8px] pl-[12px] mb-[36px] text-[14px] tracking-[-0.03em] font-semibold">
+                {getSelectedRaceName()}
               </div>
-              <div className="pl-[12px] pb-[8px] text-[14px] tracking-[-0.03em] font-semibold">
+              <div className="flex pl-[12px] pb-[8px] text-[14px] tracking-[-0.03em] font-semibold">
                 RACE
               </div>
-            </div>
-            <div className="border-t-2 bg-gray-100 mt-[8px] mb-[8px]">
-              <div className="pt-[8px] pl-[12px] mb-[36px] text-[14px] tracking-[-0.03em] font-semibold">
-                {getHighestAge()}
+            </button>
+
+            <button
+              onClick={() => {
+                setSelectedCategory("age");
+                setSelectedAge(null);
+              }}
+              className={`w-full border-t-2 mt-[8px] mb-[8px] cursor-pointer transition-colors ${
+                selectedCategory === "age"
+                  ? "bg-black text-white"
+                  : "bg-[#f3f3f4] hover:bg-gray-200"
+              }`}
+            >
+              <div className="flex pt-[8px] pl-[12px] mb-[36px] text-[14px] tracking-[-0.03em] font-semibold">
+                {selectedCategory === "age"
+                  ? getSelectedName()
+                  : getHighestAge()}
               </div>
-              <div className="pl-[12px] pb-[8px] text-[14px] tracking-[-0.03em] font-semibold">
+              <div className="flex pl-[12px] pb-[8px] text-[14px] tracking-[-0.03em] font-semibold">
                 AGE
               </div>
-            </div>
-            <div className="border-t-2 bg-gray-100">
-              <div className="pt-[8px] pl-[12px] mb-[36px] text-[14px] tracking-[-0.03em] font-semibold">
-                {getHighestGender()}
+            </button>
+
+            <button
+              onClick={() => {
+                setSelectedCategory("gender");
+                setSelectedGender(null);
+              }}
+              className={`w-full border-t-2 transition-colors cursor-pointer ${
+                selectedCategory === "gender"
+                  ? "bg-black text-white"
+                  : "bg-[#f3f3f4] hover:bg-gray-200"
+              }`}
+            >
+              <div className="flex pt-[8px] pl-[12px] mb-[36px] text-[14px] tracking-[-0.03em] font-semibold">
+                {selectedCategory === "gender"
+                  ? getSelectedName()
+                  : getHighestGender()}
               </div>
-              <div className="pl-[12px] pb-[8px] text-[14px] tracking-[-0.03em] font-semibold">
-                GENDER
+              <div className="flex pl-[12px] pb-[8px] text-[14px] tracking-[-0.03em] font-semibold">
+                SEX
               </div>
-            </div>
+            </button>
           </div>
-          <div className="border-t-2 bg-gray-100 transform-none rotate-0 w-[60%] mr-[8px] ml-[8px]">
-            <div className="pl-[24px] pt-[16px] pb-[16px] pr-[24px]">
+          <div className="border-t-2 bg-[#f3f3f4] transform-none rotate-0 w-[60%] mr-[8px] ml-[8px]">
+            <div className="pl-[24px] pt-[16px] pb-[16px] pr-[24px] h-full">
               <div className="font-[600] text-[14px]">A.I. CONFIDENCE</div>
-              <div className="flex-1 flex items-end justify-end ">
-                <CircularProgress
-                  percentage={
-                    result?.data?.race
-                      ? (
-                          Math.max(...Object.values(result.data.race)) * 100
-                        ).toFixed(1)
-                      : "0"
-                  }
-                  size={140}
-                  strokeWidth={3}
-                />
+              <div className="flex-1 flex items-end justify-end pb-[32px] pr-[16px] h-full">
+                  <CircularProgress
+                    percentage={getSelectedConfidence()}
+                    size={240}
+                    strokeWidth={2}
+                  />
               </div>
             </div>
           </div>
-          <div className="transform-none rotate-0 w-[27%] ml-[8px] border-t-2 bg-gray-100">
-            <div className="border-1 pr-[16px] pl-[16px] pt-[12px] pb-[12px] flex justify-between">
+          <div className="transform-none rotate-0 w-[27%] ml-[8px] border-t-2 bg-[#f3f3f4]">
+            <div className="pr-[16px] pl-[16px] pt-[12px] pb-[12px] flex justify-between text-[14px] text-[#5f6060] tracking-[-0.05em]">
               <div>RACE</div>
               <div>A.I. CONFIDENCE</div>
             </div>
             <div>
-              {result?.data?.race &&
+              {selectedCategory === "race" &&
+                result?.data?.race &&
                 Object.entries(result.data.race)
                   .sort(([, a], [, b]) => b - a)
-                  .map(([race, confidence], index) => (
-                    <div
-                      key={index}
-                      className="border-1 pr-[16px] pl-[16px] pt-[12px] pb-[12px] flex justify-between"
-                    >
-                      <div className={index === 0 ? "font-semibold" : ""}>
-                        {race.toUpperCase()}
-                      </div>
-                      <div>{(confidence * 100).toFixed(1)}%</div>
-                    </div>
-                  ))}
+                  .map(([race, confidence], index) => {
+                    const isSelected =
+                      selectedRace === race || (!selectedRace && index === 0);
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedRace(race)}
+                        className={`w-full pr-[16px] pl-[16px] pt-[12px] pb-[12px] flex justify-between items-center transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-black text-white"
+                            : "bg-[#f3f3f4] hover:bg-[#e4e4e5]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-[8px]">
+                          <DiamondIcon filled={isSelected} />
+                          <span className={isSelected}>
+                            {race.charAt(0).toUpperCase() + race.slice(1)}
+                          </span>
+                        </div>
+                        <div className="font-mono">
+                          {(confidence * 100).toFixed(1)}%
+                        </div>
+                      </button>
+                    );
+                  })}
+
+              {selectedCategory === "age" &&
+                result?.data?.age &&
+                Object.entries(result.data.age)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([age, confidence], index) => {
+                    const isSelected =
+                      selectedAge === age || (!selectedAge && index === 0);
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedAge(age)}
+                        className={`w-full pr-[16px] pl-[16px] pt-[12px] pb-[12px] flex justify-between items-center transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-black text-white"
+                            : "bg-[#f3f3f4] hover:bg-[#e4e4e5]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-[8px]">
+                          <DiamondIcon filled={isSelected} />
+                          <span className={isSelected}>{age}</span>
+                        </div>
+                        <div className="font-mono">
+                          {(confidence * 100).toFixed(1)}%
+                        </div>
+                      </button>
+                    );
+                  })}
+
+              {selectedCategory === "gender" &&
+                result?.data?.gender &&
+                Object.entries(result.data.gender)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([gender, confidence], index) => {
+                    const isSelected =
+                      selectedGender === gender ||
+                      (!selectedGender && index === 0);
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedGender(gender)}
+                        className={`w-full pr-[16px] pl-[16px] pt-[12px] pb-[12px] flex justify-between items-center transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-black text-white"
+                            : "bg-[#f3f3f4] hover:bg-[#e4e4e5]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-[8px]">
+                          <DiamondIcon filled={isSelected} />
+                          <span className={isSelected ? "font-semibold" : ""}>
+                            {gender.charAt(0).toUpperCase() + gender.slice(1)}
+                          </span>
+                        </div>
+                        <div className="font-mono">
+                          {(confidence * 100).toFixed(1)}%
+                        </div>
+                      </button>
+                    );
+                  })}
             </div>
           </div>
         </div>
       </div>
-      <div className="border-1 flex justify-between items-center px-[32px] py-[24px]">
+      <div className="flex justify-between items-center px-[42px] py-[36px]">
         <div className="transform-none rotate-0 relative">
-          <BackButton onNavigate={() => handleNavigateOut("/testing")} />
+          <BackButton onNavigate={() => handleNavigateOut()} />
         </div>
         <div className="text-[12px] text-gray-600">
           If A.I. estimate is wrong, select the correct one.
         </div>
         <div className="flex gap-[12px]">
-          <button className="px-[16px] py-[8px] border border-gray-300 text-[12px]">
-            RESET
-          </button>
-          <button className="px-[16px] py-[8px] bg-black text-white text-[12px]">
+          <button
+            onClick={handleConfirm}
+            className="px-[16px] py-[8px] bg-black text-white text-[12px]"
+          >
             CONFIRM
           </button>
         </div>
