@@ -13,6 +13,26 @@ export default function TestingPage() {
   const canvasRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [cameraMode, setCameraMode] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  
+  // Hide navbar during camera mode
+  useEffect(() => {
+    const navbar = document.querySelector('nav');
+    if (navbar) {
+      if (cameraMode) {
+        navbar.style.display = 'none';
+      } else {
+        navbar.style.display = 'flex';
+      }
+    }
+    
+    // Cleanup function to restore navbar when component unmounts
+    return () => {
+      if (navbar) {
+        navbar.style.display = 'flex';
+      }
+    };
+  }, [cameraMode]);
 
   
   //animating the dotted squares
@@ -135,14 +155,35 @@ export default function TestingPage() {
       const context = canvas.getContext("2d");
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL("image/png");
-      //immediately redirect to analysis page and handle loading there
-      await handleImageDataUrl(dataUrl);
-      //stops camera
+      
+      // Set the captured image to display during animation
+      setCapturedImage(dataUrl);
+      
+      // Stop camera first
+      
       const stream = video.srcObject;
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
-      setCameraMode(false);
+      
+      // Animate the camera overlay out while keeping cameraMode true
+      const cameraOverlay = document.querySelector('.camera-overlay');
+      if (cameraOverlay) {
+        gsap.to(cameraOverlay, {
+          opacity: 0,
+          scale: 0.90,
+          duration: 1.2,
+          ease: "power2.in",
+          onComplete: async () => {
+            // Keep the white background visible by not setting cameraMode to false
+            // The white background will stay until navigation completes
+            await handleImageDataUrl(dataUrl);
+          },
+        });
+      } else {
+        // Fallback if overlay not found
+        await handleImageDataUrl(dataUrl);
+      }
     }
   };
 
@@ -179,23 +220,48 @@ export default function TestingPage() {
       //runs the file when its done reading it
       const base64String = reader.result.split(",")[1]; //reader.result is data URL. split just gets the base64 url part
       setLoading(true);
-      try {
-        const response = await fetch(
-          "https://us-central1-frontend-simplified.cloudfunctions.net/skinstricPhaseTwo",
-          {
-            method: "POST", //send data
-            headers: { "Content-Type": "application/json" }, //tells server i am sending json
-            body: JSON.stringify({ image: base64String }), //sending an image object with Base64 image
-          }
-        );
-        const data = await response.json(); //waits for response and parse it in JSON
-        console.log(data);
-        localStorage.setItem("analysisResult", JSON.stringify(data));
-        router.push("/analysis");
-      } catch (err) {
-        alert("Failed to scan image");
-      }
-      setLoading(false);
+      
+      // Animate main content out before making the API call
+      gsap.to(
+        [toStartAnalysisTextRef.current, cameraRef.current, galleryRef.current],
+        {
+          opacity: 0,
+          y: 60,
+          duration: 0.7,
+          ease: "power2.in",
+          stagger: 0.05,
+          onComplete: async () => {
+            try {
+              const response = await fetch(
+                "https://us-central1-frontend-simplified.cloudfunctions.net/skinstricPhaseTwo",
+                {
+                  method: "POST", //send data
+                  headers: { "Content-Type": "application/json" }, //tells server i am sending json
+                  body: JSON.stringify({ image: base64String }), //sending an image object with Base64 image
+                }
+              );
+              const data = await response.json(); //waits for response and parse it in JSON
+              console.log(data);
+              localStorage.setItem("analysisResult", JSON.stringify(data));
+              router.push("/analysis");
+            } catch (err) {
+              alert("Failed to scan image");
+              // If there's an error, animate content back in
+              gsap.to(
+                [toStartAnalysisTextRef.current, cameraRef.current, galleryRef.current],
+                {
+                  opacity: 1,
+                  y: 0,
+                  duration: 0.7,
+                  ease: "power2.out",
+                  stagger: 0.05,
+                }
+              );
+            }
+            setLoading(false);
+          },
+        }
+      );
     };
     reader.readAsDataURL(file); //reads the file as data URL (base64)
   };
@@ -213,65 +279,76 @@ export default function TestingPage() {
         <div className="flex w-full items-center justify-center gap-84">
           {/* Left Diamond Button */}
           {cameraMode ? (
-            <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
-              <video
-                ref={videoRef}
-                className="w-full h-full object-cover"
-                autoPlay
-                playsInline
-                style={{ position: "absolute", top: 0, left: 0, transform: "scaleX(-1)" }}
-              />
+            <>
+              <div className="fixed inset-0 bg-white z-40" />
+              <div className="camera-overlay fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+                {capturedImage ? (
+                  <img
+                    src={capturedImage}
+                    className="w-full h-full object-cover"
+                    style={{ position: "absolute", top: 0, left: 0, transform: "scaleX(-1)" }}
+                  />
+                ) : (
+                  <video
+                    ref={videoRef}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    playsInline
+                    style={{ position: "absolute", top: 0, left: 0, transform: "scaleX(-1)" }}
+                  />
+                )}
 
-              <div
-                className="absolute inset-0 z-10 pointer-events-none"
-                style={{
-                  WebkitMaskImage:
-                    "radial-gradient(ellipse 210px 280px at 50% 50%, transparent 180px, black 250px)",
-                  maskImage:
-                    "radial-gradient(ellipse 210px 280px at 50% 50%, transparent 180px, black 250px)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                }}
-              />
+                <div
+                  className="absolute inset-0 z-10 pointer-events-none"
+                  style={{
+                    WebkitMaskImage:
+                      "radial-gradient(ellipse 210px 280px at 50% 50%, transparent 180px, black 250px)",
+                    maskImage:
+                      "radial-gradient(ellipse 210px 280px at 50% 50%, transparent 180px, black 250px)",
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                  }}
+                />
 
-              <div
-                className="absolute left-1/2 top-1/2 z-20"
-                style={{
-                  transform: "translate(-50%, -50%)",
-                  width: "420px",
-                  height: "560px",
-                  border: "1px solid white",
-                  borderRadius: "50%",
-                  boxSizing: "border-box",
-                  pointerEvents: "none",
-                }}
-              />
-              <div className="absolute text-gray-300 top-50 text-xs">
-                PLACE YOUR HEAD IN CIRCLE
+                <div
+                  className="absolute left-1/2 top-1/2 z-20"
+                  style={{
+                    transform: "translate(-50%, -50%)",
+                    width: "420px",
+                    height: "560px",
+                    border: "1px solid white",
+                    borderRadius: "50%",
+                    boxSizing: "border-box",
+                    pointerEvents: "none",
+                  }}
+                />
+                <div className="absolute text-gray-300 top-50 text-xs">
+                  PLACE YOUR HEAD IN CIRCLE
+                </div>
+                <div className="absolute right-0 flex flex-col items-center z-10 pr-8">
+                  <canvas ref={canvasRef} style={{ display: "none" }} />
+
+                  <button
+                    className="mb-4 w-20 h-20 flex items-center justify-center rounded-full bg-white shadow-lg border-2 border-gray-300 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                    onClick={handleCapture}
+                    disabled={loading}
+                  >
+                    
+                      <svg
+                        className="w-10 h-10 text-gray-700"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2l2-3h6l2 3h2a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
+                    
+                  </button>
+                </div>
               </div>
-              <div className="absolute right-0 flex flex-col items-center z-10 pr-8">
-                <canvas ref={canvasRef} style={{ display: "none" }} />
-
-                <button
-                  className="mb-4 w-20 h-20 flex items-center justify-center rounded-full bg-white shadow-lg border-2 border-gray-300 hover:bg-gray-100 transition-colors disabled:opacity-50"
-                  onClick={handleCapture}
-                  disabled={loading}
-                >
-                  
-                    <svg
-                      className="w-10 h-10 text-gray-700"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2l2-3h6l2 3h2a2 2 0 0 1 2 2z" />
-                      <circle cx="12" cy="13" r="4" />
-                    </svg>
-                  
-                </button>
-              </div>
-            </div>
+            </>
           ) : (
             <div
               ref={cameraRef}

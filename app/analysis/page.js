@@ -12,6 +12,7 @@ function AnalysisPage() {
   const [selectedAge, setSelectedAge] = useState(null);
   const [selectedGender, setSelectedGender] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("race");
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
   const rightSquare1 = useRef(null);
@@ -21,7 +22,21 @@ function AnalysisPage() {
   const bookTextRef = useRef(null);
   const preparingAnalysis = useRef(null);
 
+  //main content animations
+  const titleRef = useRef(null);
+  const subtitleRef = useRef(null);
+  const descriptionRef = useRef(null);
+  const leftColumnRef = useRef(null);
+  const middleColumnRef = useRef(null);
+  const rightColumnRef = useRef(null);
+  const bottomSectionRef = useRef(null);
+
   const rotationAnims = useRef([]);
+
+  // Set mounted state to prevent hydration flash
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   //for right column button
   const DiamondIcon = ({ filled = false, size = 12 }) => {
@@ -204,7 +219,7 @@ function AnalysisPage() {
   };
 
   useEffect(() => {
-    if (loading && bookTextRef.current) {
+    if (loading && mounted && bookTextRef.current) {
       gsap.fromTo(
         bookTextRef.current,
         {
@@ -214,30 +229,33 @@ function AnalysisPage() {
           clipPath: "inset(0 0% 0 0%)",
           duration: 1.2,
           ease: "power2.out",
+          delay: 0.5, // Delay the text animation by 1 second
         }
       );
     }
-  }, [loading]);
+  }, [loading, mounted]);
 
   useEffect(() => {
     setTimeout(() => {
-      //reversing animation
+      // Animate squares and text out simultaneously
+      gsap.to([rightSquare1.current, rightSquare2.current, rightSquare3.current], {
+        opacity: 0,
+        scale: 0.8,
+        duration: 0.8,
+        ease: "power2.in",
+        stagger: 0.1,
+      });
+
       if (bookTextRef.current) {
         gsap.to(bookTextRef.current, {
           clipPath: "inset(0 50% 0 50%)",
-          duration: 1.2,
+          duration: 0.8,
           ease: "power2.in",
-          onComplete: () => {
-            const stored = localStorage.getItem("analysisResult");
-            if (stored) {
-              const parsedResult = JSON.parse(stored);
-              console.log("Parsed Result: ", parsedResult);
-              setResult(parsedResult);
-            }
-            setLoading(false);
-          },
         });
-      } else {
+      }
+
+      // Wait for both animations to complete before transitioning
+      gsap.delayedCall(0.8, () => {
         const stored = localStorage.getItem("analysisResult");
         if (stored) {
           const parsedResult = JSON.parse(stored);
@@ -245,18 +263,18 @@ function AnalysisPage() {
           setResult(parsedResult);
         }
         setLoading(false);
-      }
-    }, 5000);
+      });
+    }, 6500);
   }, []);
 
   useEffect(() => {
-    if (loading) {
-      // Set initial positions first
-      if (rightSquare1.current) gsap.set(rightSquare1.current, { rotate: 45 });
-      if (rightSquare2.current) gsap.set(rightSquare2.current, { rotate: 75 });
-      if (rightSquare3.current) gsap.set(rightSquare3.current, { rotate: 105 });
+    if (loading && mounted) {
+      // Set initial positions and opacity
+      if (rightSquare1.current) gsap.set(rightSquare1.current, { rotate: 45, opacity: 0 });
+      if (rightSquare2.current) gsap.set(rightSquare2.current, { rotate: 75, opacity: 0 });
+      if (rightSquare3.current) gsap.set(rightSquare3.current, { rotate: 105, opacity: 0 });
 
-      // Start spinning
+      // Start spinning immediately
       rotationAnims.current = [
         gsap.to(rightSquare1.current, {
           rotate: 405,
@@ -277,11 +295,19 @@ function AnalysisPage() {
           ease: "linear",
         }),
       ];
+
+      // Fade in the squares with stagger (spinning will already be happening)
+      gsap.to([rightSquare1.current, rightSquare2.current, rightSquare3.current], {
+        opacity: 1,
+        duration: 1.2,
+        ease: "power2.out",
+        delay: 0.5,
+      });
     } else {
       // Stop spinning - the squares will be unmounted anyway
       rotationAnims.current.forEach((anim) => anim && anim.kill());
     }
-  }, [loading]);
+  }, [loading, mounted]);
 
   // Cleanup effect to kill all animations when component unmounts
   useEffect(() => {
@@ -290,10 +316,59 @@ function AnalysisPage() {
     };
   }, []);
 
+  // Entrance animations when loading finishes
+  useEffect(() => {
+    if (!loading && result) {
+      // Set initial positions
+      gsap.set([titleRef.current, subtitleRef.current, descriptionRef.current], {
+        clipPath: "inset(0 100% 0 0)",
+        opacity: 0
+      });
+      
+      gsap.set([leftColumnRef.current, middleColumnRef.current, rightColumnRef.current], {
+        clipPath: "inset(0 0 100% 0)",
+        opacity: 0
+      });
+      
+      gsap.set(bottomSectionRef.current, {
+        opacity: 0,
+        y: 30
+      });
+
+      // Animate text elements from left to right
+      gsap.to([titleRef.current, subtitleRef.current, descriptionRef.current], {
+        clipPath: "inset(0 0% 0 0)",
+        opacity: 1,
+        duration: 1.2,
+        ease: "power2.out",
+        stagger: 0.2
+      });
+
+      // Animate columns from top to bottom
+      gsap.to([leftColumnRef.current, middleColumnRef.current, rightColumnRef.current], {
+        clipPath: "inset(0% 0 0% 0)",
+        opacity: 1,
+        duration: 1.2,
+        ease: "power2.out",
+        stagger: 0.1,
+        delay: 0.5
+      });
+
+      // Animate bottom section
+      gsap.to(bottomSectionRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power2.out",
+        delay: 0.9
+      });
+    }
+  }, [loading, result]);
+
   const handleNavigateOut = () => {
     //animating main content out
     gsap.to(
-      [toStartAnalysisTextRef.current, cameraRef.current, galleryRef.current],
+      [titleRef.current, subtitleRef.current, descriptionRef.current, leftColumnRef.current, middleColumnRef.current, rightColumnRef.current, bottomSectionRef.current],
       {
         opacity: 0,
         y: 60,
@@ -334,14 +409,17 @@ function AnalysisPage() {
             <div
               ref={rightSquare1}
               className="w-88 h-88 border-2 border-gray-400 border-dotted relative z-10"
+              style={{ opacity: 0 }}
             />
             <div
               ref={rightSquare2}
               className="w-94 h-94 border-2 border-[#b7bcc5] border-dotted absolute z-20"
+              style={{ opacity: 0 }}
             />
             <div
               ref={rightSquare3}
               className="w-100 h-100 border-2 border-gray-300 border-dotted absolute z-30"
+              style={{ opacity: 0 }}
             />
             <div
               ref={bookTextRef}
@@ -368,13 +446,13 @@ function AnalysisPage() {
     <div className="min-h-screen flex flex-col transform-none rotate-0">
       <div className="flex-1 pt-[72px] pl-[32px] pr-[32px] pb-[32px]">
         <div className="flex-col !transform-none !rotate-0">
-          <div className="text-[13px] font-[400] !transform-none !rotate-0">
+          <div ref={titleRef} className="text-[13px] font-[400] !transform-none !rotate-0">
             A.I. ANALYSIS
           </div>
-          <div className="font-[400] text-[54px] tracking-[-0.05em] !transform-none !rotate-0">
+          <div ref={subtitleRef} className="font-[400] text-[54px] tracking-[-0.05em] !transform-none !rotate-0">
             DEMOGRAPHICS
           </div>
-          <div className="text-[14px] font-[300] !transform-none !rotate-0">
+          <div ref={descriptionRef} className="text-[14px] font-[300] !transform-none !rotate-0">
             PREDICTED RACE & AGE
           </div>
         </div>
@@ -382,7 +460,7 @@ function AnalysisPage() {
           className="flex transform-none rotate-0 mt-[32px] flex-1"
           style={{ minHeight: "calc(100vh - 364px)" }}
         >
-          <div className="transform-none rotate-0 w-[13%] mr-[8px]">
+          <div ref={leftColumnRef} className="transform-none rotate-0 w-[13%] mr-[8px]">
             <button
               onClick={() => {
                 setSelectedCategory("race");
@@ -444,7 +522,7 @@ function AnalysisPage() {
               </div>
             </button>
           </div>
-          <div className="border-t-2 bg-[#f3f3f4] transform-none rotate-0 w-[60%] mr-[8px] ml-[8px]">
+          <div ref={middleColumnRef} className="border-t-2 bg-[#f3f3f4] transform-none rotate-0 w-[60%] mr-[8px] ml-[8px]">
             <div className="pl-[24px] pt-[16px] pb-[16px] pr-[24px] h-full">
               <div className="font-[600] text-[14px]">A.I. CONFIDENCE</div>
               <div className="flex-1 flex items-end justify-end pb-[32px] pr-[16px] h-full">
@@ -456,7 +534,7 @@ function AnalysisPage() {
               </div>
             </div>
           </div>
-          <div className="transform-none rotate-0 w-[27%] ml-[8px] border-t-2 bg-[#f3f3f4]">
+          <div ref={rightColumnRef} className="transform-none rotate-0 w-[27%] ml-[8px] border-t-2 bg-[#f3f3f4]">
             <div className="pr-[16px] pl-[16px] pt-[12px] pb-[12px] flex justify-between text-[14px] text-[#5f6060] tracking-[-0.05em]">
               <div>RACE</div>
               <div>A.I. CONFIDENCE</div>
@@ -482,7 +560,7 @@ function AnalysisPage() {
                       >
                         <div className="flex items-center gap-[8px]">
                           <DiamondIcon filled={isSelected} />
-                          <span className={isSelected}>
+                          <span className={isSelected ? "" : ""}>
                             {race.charAt(0).toUpperCase() + race.slice(1)}
                           </span>
                         </div>
@@ -543,7 +621,7 @@ function AnalysisPage() {
                       >
                         <div className="flex items-center gap-[8px]">
                           <DiamondIcon filled={isSelected} />
-                          <span className={isSelected ? "font-semibold" : ""}>
+                          <span className={isSelected ? "" : ""}>
                             {gender.charAt(0).toUpperCase() + gender.slice(1)}
                           </span>
                         </div>
@@ -557,7 +635,7 @@ function AnalysisPage() {
           </div>
         </div>
       </div>
-      <div className="flex justify-between items-center px-[42px] py-[36px]">
+      <div ref={bottomSectionRef} className="flex justify-between items-center px-[42px] py-[36px]">
         <div className="transform-none rotate-0 relative">
           <BackButton onNavigate={() => handleNavigateOut()} />
         </div>
@@ -567,7 +645,7 @@ function AnalysisPage() {
         <div className="flex gap-[12px]">
           <button
             onClick={handleConfirm}
-            className="px-[16px] py-[8px] bg-black text-white text-[12px]"
+            className=" cursor-pointer px-[16px] py-[8px] bg-black text-white text-[12px] hover:bg-white hover:text-black hover:border-1"
           >
             CONFIRM
           </button>
